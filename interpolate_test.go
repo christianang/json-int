@@ -1,4 +1,4 @@
-package main
+package jsonint_test
 
 import (
 	jsonint "github.com/christianang/json-int"

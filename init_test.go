@@ -1,4 +1,4 @@
-package main
+package jsonint_test
 
 import (
 	"testing"
