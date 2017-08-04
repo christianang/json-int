@@ -60,19 +60,27 @@ func interpolateSlice(data []interface{}, variables map[string]string) ([]interf
 	for _, value := range data {
 		switch value.(type) {
 		case string:
-			variableExists := false
 			for varKey, varValue := range variables {
 				if value.(string) == fmt.Sprintf("((%s))", varKey) {
-					interpolatedData = append(interpolatedData, varValue)
-					variableExists = true
+					value = varValue
 				}
 			}
-			if !variableExists {
-				interpolatedData = append(interpolatedData, value)
+		case map[string]interface{}:
+			var err error
+			value, err = interpolateMap(value.(map[string]interface{}), variables)
+			if err != nil {
+				return []interface{}{}, err
+			}
+		case []interface{}:
+			var err error
+			value, err = interpolateSlice(value.([]interface{}), variables)
+			if err != nil {
+				return []interface{}{}, err
 			}
 		default:
 			return []interface{}{}, fmt.Errorf("value is an unknown type of %s", reflect.TypeOf(value))
 		}
+		interpolatedData = append(interpolatedData, value)
 	}
 
 	return interpolatedData, nil

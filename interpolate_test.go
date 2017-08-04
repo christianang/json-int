@@ -21,14 +21,23 @@ var _ = Describe("Interpolate", func() {
 					"array": [
 						"((array-var-1))",
 						"some-regular-value",
-						"((array-var-2))"
+						"((array-var-2))",
+						{
+							"complex-value": {
+								"key": "((complex-array-var))"
+							}
+						},
+						["((nested-array-var-1))", "((nested-array-var-2))"]
 					]
 				}`,
 				map[string]string{
-					"first-var":   "my-first-value",
-					"second-var":  "my-second-value",
-					"array-var-1": "my-array-value-1",
-					"array-var-2": "my-array-value-2",
+					"first-var":          "my-first-value",
+					"second-var":         "my-second-value",
+					"array-var-1":        "my-array-value-1",
+					"array-var-2":        "my-array-value-2",
+					"complex-array-var":  "my-complex-array-value",
+					"nested-array-var-1": "my-nested-array-value-1",
+					"nested-array-var-2": "my-nested-array-value-2",
 				},
 			)
 			Expect(err).NotTo(HaveOccurred())
@@ -41,7 +50,13 @@ var _ = Describe("Interpolate", func() {
 				"array": [
 					"my-array-value-1",
 					"some-regular-value",
-					"my-array-value-2"
+					"my-array-value-2",
+					{
+						"complex-value": {
+							"key": "my-complex-array-value"
+						}
+					},
+					["my-nested-array-value-1", "my-nested-array-value-2"]
 				]
 			}`))
 		})
