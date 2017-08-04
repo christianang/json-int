@@ -28,28 +28,11 @@ func Interpolate(data string, variables map[string]string) (string, error) {
 
 func interpolateMap(data map[string]interface{}, variables map[string]string) (map[string]interface{}, error) {
 	for key, value := range data {
-		switch value.(type) {
-		case string:
-			for varKey, varValue := range variables {
-				if value.(string) == fmt.Sprintf("((%s))", varKey) {
-					data[key] = varValue
-				}
-			}
-		case map[string]interface{}:
-			var err error
-			data[key], err = interpolateMap(value.(map[string]interface{}), variables)
-			if err != nil {
-				return map[string]interface{}{}, err
-			}
-		case []interface{}:
-			var err error
-			data[key], err = interpolateSlice(value.([]interface{}), variables)
-			if err != nil {
-				return map[string]interface{}{}, err
-			}
-		default:
-			return map[string]interface{}{}, fmt.Errorf("value is an unknown type of %s", reflect.TypeOf(value))
+		value, err := interpolateValue(value, variables)
+		if err != nil {
+			return nil, err
 		}
+		data[key] = value
 	}
 
 	return data, nil
@@ -58,30 +41,39 @@ func interpolateMap(data map[string]interface{}, variables map[string]string) (m
 func interpolateSlice(data []interface{}, variables map[string]string) ([]interface{}, error) {
 	var interpolatedData []interface{}
 	for _, value := range data {
-		switch value.(type) {
-		case string:
-			for varKey, varValue := range variables {
-				if value.(string) == fmt.Sprintf("((%s))", varKey) {
-					value = varValue
-				}
-			}
-		case map[string]interface{}:
-			var err error
-			value, err = interpolateMap(value.(map[string]interface{}), variables)
-			if err != nil {
-				return []interface{}{}, err
-			}
-		case []interface{}:
-			var err error
-			value, err = interpolateSlice(value.([]interface{}), variables)
-			if err != nil {
-				return []interface{}{}, err
-			}
-		default:
-			return []interface{}{}, fmt.Errorf("value is an unknown type of %s", reflect.TypeOf(value))
+		value, err := interpolateValue(value, variables)
+		if err != nil {
+			return nil, err
 		}
 		interpolatedData = append(interpolatedData, value)
 	}
 
 	return interpolatedData, nil
+}
+
+func interpolateValue(value interface{}, variables map[string]string) (interface{}, error) {
+	switch value.(type) {
+	case string:
+		for varKey, varValue := range variables {
+			if value.(string) == fmt.Sprintf("((%s))", varKey) {
+				value = varValue
+			}
+		}
+	case map[string]interface{}:
+		var err error
+		value, err = interpolateMap(value.(map[string]interface{}), variables)
+		if err != nil {
+			return nil, err
+		}
+	case []interface{}:
+		var err error
+		value, err = interpolateSlice(value.([]interface{}), variables)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("value is an unknown type of %s", reflect.TypeOf(value))
+	}
+
+	return value, nil
 }

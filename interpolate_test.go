@@ -6,10 +6,6 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-const (
-	jsonTemplate = ``
-)
-
 var _ = Describe("Interpolate", func() {
 	Context("when a json template and variables are provided", func() {
 		It("returns json with variables interpolated into template", func() {
