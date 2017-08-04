@@ -3,6 +3,7 @@ package jsonint
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 )
 
 func Interpolate(data string, variables map[string]string) (string, error) {
@@ -12,7 +13,7 @@ func Interpolate(data string, variables map[string]string) (string, error) {
 		panic(err)
 	}
 
-	dataJSON, err = interpolate(dataJSON, variables)
+	dataJSON, err = interpolateMap(dataJSON, variables)
 	if err != nil {
 		panic(err)
 	}
@@ -25,25 +26,54 @@ func Interpolate(data string, variables map[string]string) (string, error) {
 	return string(interpolatedData), nil
 }
 
-func interpolate(dataJSON map[string]interface{}, variables map[string]string) (map[string]interface{}, error) {
-	for key, value := range dataJSON {
+func interpolateMap(data map[string]interface{}, variables map[string]string) (map[string]interface{}, error) {
+	for key, value := range data {
 		switch value.(type) {
 		case string:
 			for varKey, varValue := range variables {
 				if value.(string) == fmt.Sprintf("((%s))", varKey) {
-					dataJSON[key] = varValue
+					data[key] = varValue
 				}
 			}
 		case map[string]interface{}:
 			var err error
-			dataJSON[key], err = interpolate(value.(map[string]interface{}), variables)
+			data[key], err = interpolateMap(value.(map[string]interface{}), variables)
+			if err != nil {
+				panic(err)
+			}
+		case []interface{}:
+			var err error
+			data[key], err = interpolateSlice(value.([]interface{}), variables)
 			if err != nil {
 				panic(err)
 			}
 		default:
-			panic("value is an unknown type")
+			panic(fmt.Sprintf("value is an unknown type %s", reflect.TypeOf(value)))
 		}
 	}
 
-	return dataJSON, nil
+	return data, nil
+}
+
+func interpolateSlice(data []interface{}, variables map[string]string) ([]interface{}, error) {
+	var interpolatedData []interface{}
+	for _, value := range data {
+		switch value.(type) {
+		case string:
+			variableExists := false
+			for varKey, varValue := range variables {
+				if value.(string) == fmt.Sprintf("((%s))", varKey) {
+					interpolatedData = append(interpolatedData, varValue)
+					variableExists = true
+				}
+			}
+			if !variableExists {
+				interpolatedData = append(interpolatedData, value)
+			}
+		default:
+			panic(fmt.Sprintf("value is an unknown type %s", reflect.TypeOf(value)))
+		}
+	}
+
+	return interpolatedData, nil
 }
