@@ -10,17 +10,17 @@ func Interpolate(data string, variables map[string]string) (string, error) {
 	var dataJSON map[string]interface{}
 	err := json.Unmarshal([]byte(data), &dataJSON)
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("interpolate failed to unmarshal json: %s", err)
 	}
 
 	dataJSON, err = interpolateMap(dataJSON, variables)
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("interpolate failed: %s", err)
 	}
 
 	interpolatedData, err := json.Marshal(dataJSON)
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("interpolate failed to marshal json: %s", err)
 	}
 
 	return string(interpolatedData), nil
@@ -39,16 +39,16 @@ func interpolateMap(data map[string]interface{}, variables map[string]string) (m
 			var err error
 			data[key], err = interpolateMap(value.(map[string]interface{}), variables)
 			if err != nil {
-				panic(err)
+				return map[string]interface{}{}, err
 			}
 		case []interface{}:
 			var err error
 			data[key], err = interpolateSlice(value.([]interface{}), variables)
 			if err != nil {
-				panic(err)
+				return map[string]interface{}{}, err
 			}
 		default:
-			panic(fmt.Sprintf("value is an unknown type %s", reflect.TypeOf(value)))
+			return map[string]interface{}{}, fmt.Errorf("value is an unknown type of %s", reflect.TypeOf(value))
 		}
 	}
 
@@ -71,7 +71,7 @@ func interpolateSlice(data []interface{}, variables map[string]string) ([]interf
 				interpolatedData = append(interpolatedData, value)
 			}
 		default:
-			panic(fmt.Sprintf("value is an unknown type %s", reflect.TypeOf(value)))
+			return []interface{}{}, fmt.Errorf("value is an unknown type of %s", reflect.TypeOf(value))
 		}
 	}
 

@@ -13,8 +13,7 @@ const (
 var _ = Describe("Interpolate", func() {
 	Context("when a json template and variables are provided", func() {
 		It("returns json with variables interpolated into template", func() {
-			interpolatedJSON, err := jsonint.Interpolate(
-				`{
+			interpolatedJSON, err := jsonint.Interpolate(`{
 					"first": "((first-var))",
 					"nested": {
 						"second": "((second-var))"
